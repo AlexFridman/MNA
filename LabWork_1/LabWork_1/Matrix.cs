@@ -10,11 +10,11 @@ namespace LabWork_1
 {
     public class SquareMatrix
     {
-        private readonly decimal[][] _matrix;
+        private readonly double[][] _matrix;
 
         public int Rank { get; private set; }        
 
-        public decimal this[int row, int cell]
+        public double this[int row, int cell]
         {
             get
             {
@@ -40,15 +40,15 @@ namespace LabWork_1
         {
             return row >= 0 && row < Rank && cell >= 0 && cell < Rank;
         }
-        public IReadOnlyCollection<IReadOnlyCollection<decimal>> Matrix
+        public IReadOnlyCollection<IReadOnlyCollection<double>> Matrix
         {
             get
             {
-                return new ReadOnlyCollection<IReadOnlyCollection<decimal>>(_matrix);
+                return new ReadOnlyCollection<IReadOnlyCollection<double>>(_matrix);
             }
         }
         
-        public SquareMatrix(decimal[][] matrix)
+        public SquareMatrix(double[][] matrix)
         {
             if (!IsSquareMatrix(matrix))
             {
@@ -65,16 +65,16 @@ namespace LabWork_1
                 throw new ArgumentException("Rank must be greather than zero.");
             }
 
-            _matrix = new decimal[rank][];
+            _matrix = new double[rank][];
             for (int i = 0; i < rank; i++)
             {
-                _matrix[i] = new decimal[rank];
+                _matrix[i] = new double[rank];
             }
 
             Rank = _matrix.Length;
         }
 
-        private bool IsSquareMatrix(decimal[][] matrix)
+        private bool IsSquareMatrix(double[][] matrix)
         {
             if (matrix == null)
             {
@@ -94,12 +94,12 @@ namespace LabWork_1
             try
             {
                 var lines = File.ReadLines(path).ToList();
-                decimal[][] matrix = new decimal[lines.Count()][];
+                double[][] matrix = new double[lines.Count()][];
                 int row = 0;
                 lines.ForEach(l =>
                 {
                     matrix[row] =
-                        l.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries).Select(decimal.Parse).ToArray();
+                        l.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries).Select(double.Parse).ToArray();
                     row++;
                 });
 
@@ -139,7 +139,7 @@ namespace LabWork_1
             return a + (b*(-1));
         }
 
-        public static SquareMatrix operator *(SquareMatrix a, decimal b)
+        public static SquareMatrix operator *(SquareMatrix a, double b)
         {
             var result = new SquareMatrix(a.Rank);
             for(int i = 0; i < a.Rank; i++)
@@ -153,7 +153,7 @@ namespace LabWork_1
             return result;
         }
 
-        public static SquareMatrix operator /(SquareMatrix a, decimal b)
+        public static SquareMatrix operator /(SquareMatrix a, double b)
         {
             return a*(1/b);
         }
@@ -183,12 +183,12 @@ namespace LabWork_1
             lines.ForEach(Console.WriteLine);
         }
 
-        public decimal[][] ToRaggedArray()
+        public double[][] ToRaggedArray()
         {
-            var result = new decimal[Rank][];
+            var result = new double[Rank][];
             for (int i = 0; i < Rank; i++)
             {
-                result[i] = new decimal[Rank];
+                result[i] = new double[Rank];
                 _matrix[i].CopyTo(result[i], 0);
             }
 
