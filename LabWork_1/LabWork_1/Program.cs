@@ -59,7 +59,8 @@ namespace LabWork_1
             Console.WriteLine("Вектор-столбец B");
             PrintVector(b);
 
-            SquareMatrix A = C*k + D;
+            //SquareMatrix A = C*k + D;
+            SquareMatrix A = SquareMatrix.ReadFromFile("A0.txt");
             Console.WriteLine("Матрица A");
             A.PrintMatrix();
 
@@ -72,7 +73,7 @@ namespace LabWork_1
             SaveToFile("result.txt", solver.LastSolveResult.AsEnumerable());
         }
 
-        static void SaveToFile(string path, IEnumerable<decimal> vector)
+        static void SaveToFile(string path, IEnumerable<double> vector)
         {
             using (var stream = File.CreateText(path))
             {
@@ -83,25 +84,25 @@ namespace LabWork_1
             }
         }
 
-        static decimal[][] ReadA()
+        static double[][] ReadA()
         {
             var symNumLines = File.ReadLines("A.txt").Select(s => s.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries)).ToArray();
-            decimal[][] A = new decimal[symNumLines.Count()][];
+            double[][] A = new double[symNumLines.Count()][];
 
             for(int i = 0; i < symNumLines.Count(); i++)
             {
-                A[i] = symNumLines[i].Select(s => decimal.Parse(s)).ToArray();
+                A[i] = symNumLines[i].Select(s => double.Parse(s)).ToArray();
             }
 
             return A;
         }
 
-        static decimal[] ReadB(string path)
+        static double[] ReadB(string path)
         {
-            return File.ReadLines(path).Select(s => decimal.Parse(s)).ToArray();
+            return File.ReadLines(path).Select(s => double.Parse(s)).ToArray();
         }
 
-        static void PrintVector(decimal[] array)
+        static void PrintVector(double[] array)
         {
             array.ToList().ForEach(Console.WriteLine);
         }
