@@ -6,17 +6,17 @@ namespace LabWork_1
 {
     public class GaussMethodSolver
     {
-        private double[][] _sourceA;
-        private double[] _sourceB;
-        private double[][] _matrixA;
-        private double[] _vectorB;
+        private readonly double[][] _sourceA;
+        private readonly double[] _sourceB;
+        protected readonly double[][] MatrixA;
+        private readonly double[] _vectorB;
         private double[] _vectorX;
 
-        private int _rowCount;
-        private int _cellCount;
+        protected int RowCount { get; set; }
+        protected int CellCount { get; set; }
+
         private int _decimals;
         private double _tolerance;
-
         public int Decimals
         {
             get { return _decimals; }
@@ -48,7 +48,7 @@ namespace LabWork_1
                 throw new ArgumentException("Rank matrix A must be equal to vector B length.");
             }
             _sourceA = matrixA;
-            _matrixA = matrixA;
+            MatrixA = matrixA;
             _sourceB = vectorB;
             _vectorB = vectorB;
             Initialise();
@@ -71,13 +71,13 @@ namespace LabWork_1
 
         private void Initialise()
         {
-            _rowCount = _matrixA.Length;
-            _cellCount = _matrixA[0].Length;
-            _vectorX = new double[_cellCount];
+            RowCount = MatrixA.Length;
+            CellCount = MatrixA[0].Length;
+            _vectorX = new double[CellCount];
             Decimals = 4;
         }
 
-        private struct PositionInMatrix
+        protected struct PositionInMatrix
         {
             public int Cell { get; set; }
             public int Row { get; set; }
@@ -104,26 +104,26 @@ namespace LabWork_1
         {
             ForwardStroke();
             RevereseStroke();
-            _sourceA.CopyTo(_matrixA, 0);
+            _sourceA.CopyTo(MatrixA, 0);
             _sourceB.CopyTo(_vectorB, 0);
         }
 
 
-        private void ForwardStroke()
+        protected virtual void ForwardStroke()
         {
             int currentCell = 0;
 
-            for(int i = 0; i < _rowCount - 1; i++)
+            for(int i = 0; i < RowCount - 1; i++)
             {
                 if(IsElementEqualToZero(i, currentCell))
                 {
                     int rowToSwapNum = i;
-                    while(IsElementEqualToZero(rowToSwapNum, currentCell) && rowToSwapNum < _rowCount)
+                    while(IsElementEqualToZero(rowToSwapNum, currentCell) && rowToSwapNum < RowCount)
                     {
                         rowToSwapNum++;
                     }
 
-                    if(rowToSwapNum == _rowCount)
+                    if(rowToSwapNum == RowCount)
                     {
                         IfNoSolution();
                         throw new InvalidOperationException("No Solution");
@@ -138,29 +138,12 @@ namespace LabWork_1
             }
         }
 
-        private bool IsElementEqualToZero(int row, int cell)
+        protected bool IsElementEqualToZero(int row, int cell)
         {
-            return Math.Abs(_matrixA[row][cell]) < _tolerance;
-        }
-        private PositionInMatrix FindMaxElementOfCellPosition(int minRow, int сell)
-        {
-            var position = new PositionInMatrix { Cell = сell, Row = minRow };
-            double currentMax = Math.Abs(_matrixA[position.Row][position.Cell]);
-
-            for(int i = minRow; i < _rowCount; i++)
-            {
-                if(Math.Abs(_matrixA[i][сell]) > currentMax)
-                {
-                    currentMax = Math.Abs(_matrixA[i][сell]);
-                    position.Row = i;
-                }
-            }
-
-            return position;
+            return Math.Abs(MatrixA[row][cell]) < _tolerance;
         }
 
-
-        private void IfNoSolution()
+        protected void IfNoSolution()
         {
             for(int i = 0; i < _vectorX.Length; i++)
             {
@@ -168,31 +151,31 @@ namespace LabWork_1
             }
         }
 
-        private void SwapTwoRows(int row1, int row2)
+        protected void SwapTwoRows(int row1, int row2)
         {
             if(row1 == row2)
             {
                 return;
             }
 
-            double[] bufferArray = _matrixA[row1];
-            _matrixA[row1] = _matrixA[row2];
-            _matrixA[row2] = bufferArray;
+            double[] bufferArray = MatrixA[row1];
+            MatrixA[row1] = MatrixA[row2];
+            MatrixA[row2] = bufferArray;
 
             double buffer = _vectorB[row1];
             _vectorB[row1] = _vectorB[row2];
             _vectorB[row2] = buffer;
         }
 
-        private void SubtractCurrentRowFromTheLower(int row, int cell)
+        protected void SubtractCurrentRowFromTheLower(int row, int cell)
         {
-            for(int i = row + 1; i < _rowCount; i++)
+            for(int i = row + 1; i < RowCount; i++)
             {
                 var q = FindQForTwoRows(i, row, cell);
 
-                for(int j = cell; j < _cellCount; j++)
+                for(int j = cell; j < CellCount; j++)
                 {
-                    _matrixA[i][j] = Math.Round(_matrixA[i][j] - Math.Round(_matrixA[row][j] * q, Decimals),
+                    MatrixA[i][j] = Math.Round(MatrixA[i][j] - Math.Round(MatrixA[row][j] * q, Decimals),
                         Decimals);
                 }
 
@@ -202,24 +185,24 @@ namespace LabWork_1
 
         private double FindQForTwoRows(int dividendRow, int row2, int cell)
         {
-            double q = Math.Round(_matrixA[dividendRow][cell] / _matrixA[row2][cell], Decimals);
+            double q = Math.Round(MatrixA[dividendRow][cell] / MatrixA[row2][cell], Decimals);
 
             return q;
         }
 
         private void RevereseStroke()
         {
-            for(int i = _rowCount - 1; i >= 0; i--)
+            for(int i = RowCount - 1; i >= 0; i--)
             {
                 double temp = _vectorB[i];
 
-                int j = _cellCount - 1;
+                int j = CellCount - 1;
                 for(; j > i; j--)
                 {
-                    temp = Math.Round(temp - Math.Round(_matrixA[i][j] * _vectorX[j], Decimals), Decimals);
+                    temp = Math.Round(temp - Math.Round(MatrixA[i][j] * _vectorX[j], Decimals), Decimals);
                 }
 
-                _vectorX[i] = Math.Round(temp / _matrixA[i][j], Decimals);
+                _vectorX[i] = Math.Round(temp / MatrixA[i][j], Decimals);
             }
         }
     }
