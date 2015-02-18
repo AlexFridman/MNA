@@ -12,7 +12,7 @@ namespace LabWork_1
     {
         static void Main(string[] args)
         {
-            Execute();
+            ExecuteMainElementMethodSolver();
         }
 
         private static void GetValue()
@@ -42,7 +42,7 @@ namespace LabWork_1
             //result.Replace("*", "");
         }
 
-        private static void Execute()
+        private static void ExecuteMainElementMethodSolver()
         {
             var C = SquareMatrix.ReadFromFile("C.txt");
             var D = SquareMatrix.ReadFromFile("D.txt");
@@ -63,6 +63,37 @@ namespace LabWork_1
             Console.WriteLine("Матрица A");
             A.PrintMatrix();
 
+            var solver = new MainElementMethodSolver(A.ToRaggedArray(), b);
+            solver.Solve();
+
+            Console.WriteLine("Вектор-столбец X");
+            PrintVector(solver.LastSolveResult.ToArray());
+
+            SaveToFile("result.txt", solver.LastSolveResult.AsEnumerable());
+        }
+
+
+        private static void ExecuteGaussMethodSolver()
+        {
+            var C = SquareMatrix.ReadFromFile("C.txt");
+            var D = SquareMatrix.ReadFromFile("D.txt");
+            var b = ReadB("b.txt");
+            var k = 28;
+
+            Console.WriteLine("Матрица C");
+            C.PrintMatrix();
+
+
+            Console.WriteLine("Матрица D");
+            D.PrintMatrix();
+
+            Console.WriteLine("Вектор-столбец B");
+            PrintVector(b);
+
+            SquareMatrix A = C * k + D;
+            Console.WriteLine("Матрица A");
+            A.PrintMatrix();
+
             var solver = new GaussMethodSolver(A.ToRaggedArray(), b);
             solver.Solve();
 
@@ -71,6 +102,7 @@ namespace LabWork_1
 
             SaveToFile("result.txt", solver.LastSolveResult.AsEnumerable());
         }
+
 
         static void SaveToFile(string path, IEnumerable<double> vector)
         {

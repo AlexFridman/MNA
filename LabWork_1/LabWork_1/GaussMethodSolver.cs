@@ -1,10 +1,10 @@
-using System;
+Ôªøusing System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace LabWork_1
 {
-    internal class GaussMethodSolver
+    public class GaussMethodSolver
     {
         private double[][] _sourceA;
         private double[] _sourceB;
@@ -15,16 +15,20 @@ namespace LabWork_1
         private int _rowCount;
         private int _cellCount;
         private int _decimals;
+        private double _tolerance;
 
         public int Decimals
         {
             get { return _decimals; }
             set
             {
-                if(_decimals < 0)
+                if(value < 0)
                 {
                     throw new ArgumentException("Decimal must be greather or equal to zero.", "value");
                 }
+
+                _decimals = value;
+                _tolerance = 1 / Math.Pow(10, _decimals);
             }
         }
 
@@ -83,7 +87,19 @@ namespace LabWork_1
                 return string.Format("Row: {0}, Cell: {1}", Row, Cell);
             }
         }
+        public bool TrySolve()
+        {
+            try
+            {
+                Solve();
+            }
+            catch(InvalidOperationException)
+            {
+                return false;
+            }
 
+            return true;
+        }
         public void Solve()
         {
             ForwardStroke();
@@ -92,18 +108,29 @@ namespace LabWork_1
             _sourceB.CopyTo(_vectorB, 0);
         }
 
+
         private void ForwardStroke()
         {
             int currentCell = 0;
 
             for(int i = 0; i < _rowCount - 1; i++)
             {
-                var elementPosition = FindMaxElementOfCellPosition(i, currentCell);
+                if(IsElementEqualToZero(i, currentCell))
+                {
+                    int rowToSwapNum = i;
+                    while(IsElementEqualToZero(rowToSwapNum, currentCell) && rowToSwapNum < _rowCount)
+                    {
+                        rowToSwapNum++;
+                    }
 
+                    if(rowToSwapNum == _rowCount)
+                    {
+                        IfNoSolution();
+                        throw new InvalidOperationException("No Solution");
+                    }
 
-                int numberOfRowWithMaxElement = elementPosition.Row;
-
-                SwapTwoRows(i, numberOfRowWithMaxElement);
+                    SwapTwoRows(i, rowToSwapNum);
+                }
 
                 SubtractCurrentRowFromTheLower(i, currentCell);
 
@@ -111,21 +138,34 @@ namespace LabWork_1
             }
         }
 
-        private PositionInMatrix FindMaxElementOfCellPosition(int minRow, int Òell)
+        private bool IsElementEqualToZero(int row, int cell)
         {
-            var position = new PositionInMatrix { Cell = Òell, Row = minRow };
+            return Math.Abs(_matrixA[row][cell]) < _tolerance;
+        }
+        private PositionInMatrix FindMaxElementOfCellPosition(int minRow, int —Åell)
+        {
+            var position = new PositionInMatrix { Cell = —Åell, Row = minRow };
             double currentMax = Math.Abs(_matrixA[position.Row][position.Cell]);
 
             for(int i = minRow; i < _rowCount; i++)
             {
-                if(Math.Abs(_matrixA[i][Òell]) > currentMax)
+                if(Math.Abs(_matrixA[i][—Åell]) > currentMax)
                 {
-                    currentMax = Math.Abs(_matrixA[i][Òell]);
+                    currentMax = Math.Abs(_matrixA[i][—Åell]);
                     position.Row = i;
                 }
             }
 
             return position;
+        }
+
+
+        private void IfNoSolution()
+        {
+            for(int i = 0; i < _vectorX.Length; i++)
+            {
+                _vectorX[i] = double.NaN;
+            }
         }
 
         private void SwapTwoRows(int row1, int row2)
