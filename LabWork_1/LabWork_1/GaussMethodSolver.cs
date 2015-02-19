@@ -1,45 +1,83 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace LabWork_1
 {
-    internal class GaussMethodSolver
+    public class GaussMethodSolver
     {
-        private decimal[][] _sourceA;
-        private decimal[] _sourceB;
-        private decimal[][] _matrixA;
-        private decimal[] _vectorB;
-        private decimal[] _vectorX;
+        private readonly double[][] _sourceA;
+        private readonly double[] _sourceB;
+        protected readonly double[][] MatrixA;
+        private readonly double[] _vectorB;
+        private double[] _vectorX;
 
-        private int _rowCount;
-        private int _cellCount;
+        protected int RowCount { get; set; }
+        protected int CellCount { get; set; }
 
-        public int Decimals { get; set; }
+        private int _decimals;
+        private double _tolerance;
+        public int Decimals
+        {
+            get { return _decimals; }
+            set
+            {
+                if(value < 0)
+                {
+                    throw new ArgumentException("Decimal must be greather or equal to zero.", "value");
+                }
 
-        public IReadOnlyCollection<decimal> LastSolveResult
+                _decimals = value;
+                _tolerance = 1 / Math.Pow(10, _decimals);
+            }
+        }
+
+        public IReadOnlyCollection<double> LastSolveResult
         {
             get { return _vectorX; }
         }
 
-        public GaussMethodSolver(decimal[][] matrixA, decimal[] vectorB)
+        public GaussMethodSolver(double[][] matrixA, double[] vectorB)
         {
+            if(!IsSquareMatrix(matrixA))
+            {
+                throw new ArgumentException("Matrix A has to be square.");
+            }
+            if(matrixA.Length != vectorB.Length)
+            {
+                throw new ArgumentException("Rank matrix A must be equal to vector B length.");
+            }
             _sourceA = matrixA;
-            _matrixA = matrixA;
+            MatrixA = matrixA;
             _sourceB = vectorB;
             _vectorB = vectorB;
             Initialise();
         }
 
+        private bool IsSquareMatrix(double[][] matrix)
+        {
+            if(matrix == null)
+            {
+                throw new ArgumentNullException("matrix");
+            }
+
+            if(matrix.All(r => r.Length == matrix.Length))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         private void Initialise()
         {
-            _rowCount = _matrixA.Length;
-            _cellCount = _matrixA[0].Length;
-            _vectorX = new decimal[_cellCount];
+            RowCount = MatrixA.Length;
+            CellCount = MatrixA[0].Length;
+            _vectorX = new double[CellCount];
             Decimals = 4;
         }
 
-        private struct PositionInMatrix
+        protected struct PositionInMatrix
         {
             public int Cell { get; set; }
             public int Row { get; set; }
@@ -49,27 +87,50 @@ namespace LabWork_1
                 return string.Format("Row: {0}, Cell: {1}", Row, Cell);
             }
         }
+        public bool TrySolve()
+        {
+            try
+            {
+                Solve();
+            }
+            catch(InvalidOperationException)
+            {
+                return false;
+            }
 
+            return true;
+        }
         public void Solve()
         {
             ForwardStroke();
             RevereseStroke();
-            _sourceA.CopyTo(_matrixA, 0);
+            _sourceA.CopyTo(MatrixA, 0);
             _sourceB.CopyTo(_vectorB, 0);
         }
 
-        private void ForwardStroke()
+
+        protected virtual void ForwardStroke()
         {
             int currentCell = 0;
 
-            for (int i = 0; i < _rowCount - 1; i++)
+            for(int i = 0; i < RowCount - 1; i++)
             {
-                var elementPosition = FindMaxElementOfCellPosition(i, currentCell);
+                if(IsElementEqualToZero(i, currentCell))
+                {
+                    int rowToSwapNum = i;
+                    while(IsElementEqualToZero(rowToSwapNum, currentCell) && rowToSwapNum < RowCount)
+                    {
+                        rowToSwapNum++;
+                    }
 
+                    if(rowToSwapNum == RowCount)
+                    {
+                        IfNoSolution();
+                        throw new InvalidOperationException("No Solution");
+                    }
 
-                int numberOfRowWithMaxElement = elementPosition.Row;
-
-                SwapTwoRows(i, numberOfRowWithMaxElement);
+                    SwapTwoRows(i, rowToSwapNum);
+                }
 
                 SubtractCurrentRowFromTheLower(i, currentCell);
 
@@ -77,75 +138,71 @@ namespace LabWork_1
             }
         }
 
-        private PositionInMatrix FindMaxElementOfCellPosition(int minRow, int ñell)
+        protected bool IsElementEqualToZero(int row, int cell)
         {
-            var position = new PositionInMatrix {Cell = ñell, Row = minRow};
-            decimal currentMax = Math.Abs(_matrixA[position.Row][position.Cell]);
-
-            for (int i = minRow; i < _rowCount; i++)
-            {
-                if (Math.Abs(_matrixA[i][ñell]) > currentMax)
-                {
-                    currentMax = Math.Abs(_matrixA[i][ñell]);
-                    position.Row = i;
-                }
-            }
-
-            return position;
+            return Math.Abs(MatrixA[row][cell]) < _tolerance;
         }
 
-        private void SwapTwoRows(int row1, int row2)
+        protected void IfNoSolution()
         {
-            if (row1 == row2)
+            for(int i = 0; i < _vectorX.Length; i++)
+            {
+                _vectorX[i] = double.NaN;
+            }
+        }
+
+        protected void SwapTwoRows(int row1, int row2)
+        {
+            if(row1 == row2)
             {
                 return;
             }
 
-            decimal[] bufferArray = _matrixA[row1];
-            _matrixA[row1] = _matrixA[row2];
-            _matrixA[row2] = bufferArray;
+            double[] bufferArray = MatrixA[row1];
+            MatrixA[row1] = MatrixA[row2];
+            MatrixA[row2] = bufferArray;
 
-            decimal buffer = _vectorB[row1];
+            double buffer = _vectorB[row1];
             _vectorB[row1] = _vectorB[row2];
             _vectorB[row2] = buffer;
         }
 
-        private void SubtractCurrentRowFromTheLower(int row, int cell)
+        protected void SubtractCurrentRowFromTheLower(int row, int cell)
         {
-            for (int i = row + 1; i < _rowCount; i++)
+            for(int i = row + 1; i < RowCount; i++)
             {
                 var q = FindQForTwoRows(i, row, cell);
 
-                for (int j = cell; j < _cellCount; j++)
+                for(int j = cell; j < CellCount; j++)
                 {
-                    _matrixA[i][j] = decimal.Round(_matrixA[i][j] - decimal.Round(_matrixA[row][j]*q, Decimals),
+                    MatrixA[i][j] = Math.Round(MatrixA[i][j] - Math.Round(MatrixA[row][j] * q, Decimals),
                         Decimals);
                 }
 
-                _vectorB[i] = decimal.Round(_vectorB[i] - decimal.Round(_vectorB[row]*q, Decimals), Decimals);
+                _vectorB[i] = Math.Round(_vectorB[i] - Math.Round(_vectorB[row] * q, Decimals), Decimals);
             }
         }
 
-        private decimal FindQForTwoRows(int dividendRow, int row2, int cell)
+        private double FindQForTwoRows(int dividendRow, int row2, int cell)
         {
-            decimal q = decimal.Round(_matrixA[dividendRow][cell]/_matrixA[row2][cell], Decimals);
+            double q = Math.Round(MatrixA[dividendRow][cell] / MatrixA[row2][cell], Decimals);
 
             return q;
         }
 
         private void RevereseStroke()
         {
-            for (int i = _rowCount - 1; i >= 0; i--)
+            for(int i = RowCount - 1; i >= 0; i--)
             {
-                decimal temp = _vectorB[i];
+                double temp = _vectorB[i];
 
-                int j = _cellCount - 1;
-                for (; j > i; j--)
+                int j = CellCount - 1;
+                for(; j > i; j--)
                 {
-                    temp = decimal.Round(temp - decimal.Round(_matrixA[i][j]*_vectorX[j], Decimals), Decimals);
+                    temp = Math.Round(temp - Math.Round(MatrixA[i][j] * _vectorX[j], Decimals), Decimals);
                 }
 
-                _vectorX[i] = decimal.Round(temp/_matrixA[i][j], Decimals);
+                _vectorX[i] = Math.Round(temp / MatrixA[i][j], Decimals);
             }
         }
     }
