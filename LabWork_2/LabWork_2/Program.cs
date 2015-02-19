@@ -19,7 +19,11 @@ namespace LabWork_2
         {
             Initialize();
 
-            IterativeSolver solver = new IterativeSolver(A, b);
+            //IterativeSolver solver = new IterativeSolver(A, b);
+            //Console.WriteLine(solver.Solve());
+            //SaveMatrixToFile(A, "A.txt");
+
+            IterativeSolver solver = new SeidelSolver(A, b);
             Console.WriteLine(solver.Solve());
             SaveMatrixToFile(A, "A.txt");
 

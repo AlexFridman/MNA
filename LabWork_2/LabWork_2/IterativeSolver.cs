@@ -41,13 +41,13 @@ namespace LabWork_2
             Decimals = 4;
         }
 
-        private Vector<double> GetZeroVector(int length)
+        protected Vector<double> GetZeroVector(int length)
         {
             const double zero = 0;
             return new DenseVector(Enumerable.Repeat(zero, _matrixA.RowCount).ToArray());
         }
 
-        public Vector<double> Solve()
+        public virtual Vector<double> Solve()
         {
             var oldX = GetZeroVector(_matrixA.RowCount);
             var curX = CalcNewXVector(_matrixA, _vectorB, oldX);
@@ -60,7 +60,7 @@ namespace LabWork_2
             return curX;
         }
 
-        private Vector<double> CalcNewXVector(Matrix<double> A, Vector<double> b, Vector<double> oldX)
+        protected virtual Vector<double> CalcNewXVector(Matrix<double> A, Vector<double> b, Vector<double> oldX)
         {
             var currentVariableValues = b.Clone();
 
