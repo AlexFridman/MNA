@@ -19,14 +19,23 @@ namespace LabWork_2
         {
             Initialize();
 
-            //IterativeSolver solver = new IterativeSolver(A, b);
-            //Console.WriteLine(solver.Solve());
-            //SaveMatrixToFile(A, "A.txt");
+            ExecuteIterative();
 
+            ExecuteSeidel();
+        }
+
+        private static void ExecuteIterative()
+        {
+            IterativeSolver solver = new IterativeSolver(A, b);
+            Console.WriteLine(solver.Solve());
+            SaveMatrixToFile(A, "A.txt");
+        }
+
+        private static void ExecuteSeidel()
+        {
             IterativeSolver solver = new SeidelSolver(A, b);
             Console.WriteLine(solver.Solve());
             SaveMatrixToFile(A, "A.txt");
-
         }
 
         static void Initialize()
@@ -46,8 +55,8 @@ namespace LabWork_2
             var matrixNumLines =
                 matrixLines.Select(
                     l => l.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries).Select(double.Parse));
-            var matrixC = DenseMatrix.OfRows(matrixNumLines);
-            return matrixC;
+            var matrix = DenseMatrix.OfRows(matrixNumLines);
+            return matrix;
         }
 
         private static DenseVector ReadVectorFromFile(string filePath)

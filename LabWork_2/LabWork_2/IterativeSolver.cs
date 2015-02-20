@@ -8,11 +8,11 @@ namespace LabWork_2
 {
     public class IterativeSolver
     {
-        private readonly Matrix<double> _matrixA;
-        private readonly Vector<double> _vectorB;
+        protected readonly Matrix<double> _matrixA;
+        protected readonly Vector<double> _vectorB;
 
         private int _decimals;
-        private double _accuracy;
+        protected double _accuracy;
 
         public int Decimals
         {
@@ -36,10 +36,10 @@ namespace LabWork_2
             Initialize();
         }
 
-        private void Initialize()
+        protected virtual void Initialize()
         {
             Decimals = 4;
-        }
+        }       
 
         protected Vector<double> GetZeroVector(int length)
         {
@@ -80,7 +80,7 @@ namespace LabWork_2
             return currentVariableValues;
         }
 
-        private bool IsAccuracyReached(Vector<double> arg1, Vector<double> arg2, double accuracy)
+        protected bool IsAccuracyReached(Vector<double> arg1, Vector<double> arg2, double accuracy)
         {
             return (arg1 - arg2).Select(Math.Abs).Sum() < accuracy;
         }
