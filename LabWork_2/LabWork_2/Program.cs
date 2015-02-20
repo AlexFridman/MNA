@@ -26,16 +26,16 @@ namespace LabWork_2
 
         private static void ExecuteIterative()
         {
+            Console.WriteLine("Решение методом простых итераций");
             IterativeSolver solver = new IterativeSolver(A, b);
             Console.WriteLine(solver.Solve());
-            SaveMatrixToFile(A, "A.txt");
         }
 
         private static void ExecuteSeidel()
         {
+            Console.WriteLine("Решение методом Зейделя");
             IterativeSolver solver = new SeidelSolver(A, b);
-            Console.WriteLine(solver.Solve());
-            SaveMatrixToFile(A, "A.txt");
+            Console.WriteLine(solver.Solve());            
         }
 
         static void Initialize()
@@ -47,6 +47,12 @@ namespace LabWork_2
             
 
             b = ReadVectorFromFile("b.txt");
+
+            Console.WriteLine("Матрица A");
+            Console.WriteLine(A);
+            Console.WriteLine("=================================================");
+            Console.WriteLine("Вектор Б");
+            Console.WriteLine(b);
         }
 
         private static DenseMatrix ReadMatrixFromFile(string filePath)
