@@ -27,14 +27,14 @@ namespace LabWork_2
         private static void ExecuteIterative()
         {
             Console.WriteLine("Решение методом простых итераций");
-            IterativeSolver solver = new IterativeSolver(A, b);
+            IterativeSolver solver = new IterativeSolver(A.Clone(), b.Clone());
             Console.WriteLine(solver.Solve());
         }
 
         private static void ExecuteSeidel()
         {
             Console.WriteLine("Решение методом Зейделя");
-            IterativeSolver solver = new SeidelSolver(A, b);
+            IterativeSolver solver = new SeidelSolver(A.Clone(), b.Clone());
             Console.WriteLine(solver.Solve());            
         }
 

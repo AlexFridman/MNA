@@ -9,10 +9,33 @@ namespace LabWork_2
 {
     public class SeidelSolver : IterativeSolver
     {
+        private Vector<double> _vectorC;
+        private Matrix<double> _matrixB;
 
         public SeidelSolver(Matrix<double> matrixA, Vector<double> vectorB)
             : base(matrixA, vectorB)
         {
+        }
+
+        protected override void Initialize()
+        {
+            base.Initialize();
+            CalcVectorC();
+            CalcMatrixB();
+        }
+
+        private void CalcVectorC()
+        {
+            _vectorC = _vectorB.Clone();
+        }
+
+        private void CalcMatrixB()
+        {
+            var eMatrix = DenseMatrix.Create(_matrixA.RowCount, _matrixA.RowCount, 0);
+            double one = 1;
+            eMatrix.SetDiagonal(Enumerable.Repeat(one, _matrixA.RowCount).ToArray());
+
+            _matrixB = eMatrix - _matrixA;
         }
 
         public override Vector<double> Solve()
@@ -43,6 +66,7 @@ namespace LabWork_2
                     curr[i] = entry / diagonal;
                 }
             } while(!IsAccuracyReached(curr, prev, _accuracy));
+
 
             return curr;
         }
