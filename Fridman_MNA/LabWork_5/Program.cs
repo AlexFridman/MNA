@@ -20,8 +20,12 @@ namespace LabWork_5
         {
             Initialize();
             Console.WriteLine(A);
-            var jacobi = new JakobiMethod(new DenseMatrix(3,3,new double[]{5,1,2,1,4,1,2,1,3}));
+            var jacobi = new JakobiMethod(A);
             jacobi.Find();
+            Console.WriteLine("Собственные числа");
+            Console.WriteLine(jacobi.OwnNumbers);
+            Console.WriteLine("Собственные вектора");
+            Console.WriteLine(jacobi.OwnVectors);
         }
 
         private static void Initialize()

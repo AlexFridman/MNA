@@ -14,13 +14,17 @@ namespace LabWork_5
         public double Accuracy { get; set; }
         private Func<double, double, double, double> Pk = (Aij, Aii, Ajj) => 2*Aij/(Aii - Ajj);
         private Func<double, double> sin = Pk => Math.Sign(Pk)*Math.Sqrt(0.5*(1 - 1/Math.Sqrt(1 + Math.Pow(Pk, 2))));
-        private Func<double, double> cos = Pk => Math.Sign(Pk) * Math.Sqrt(0.5 * (1 + 1 / Math.Sqrt(1 + Math.Pow(Pk, 2))));
-        private DenseVector ownNumbers;
+        private Func<double, double> cos = Pk => Math.Sqrt(0.5 * (1 + 1 / Math.Sqrt(1 + Math.Pow(Pk, 2))));
+        private Vector<double> _ownNumbers;
+        private Matrix<double> _rotateMatrixMul;
+        public Vector<double> OwnNumbers { get { return _ownNumbers.Clone(); } set { _ownNumbers = value; } }
+        public Matrix<double> OwnVectors { get { return _rotateMatrixMul.Clone(); } set { _rotateMatrixMul = value; } }
         public JakobiMethod(Matrix<double> aMatrix)
         {
             _aMatrix = aMatrix;
-            Accuracy = 0.00000001;
-            Find();
+            Accuracy = 0.0001;
+            _rotateMatrixMul = DenseMatrix.CreateIdentity(_aMatrix.ColumnCount);
+            Find();            
         }       
 
         public void Find()
@@ -28,34 +32,37 @@ namespace LabWork_5
             int k = 0;
             var aK =  _aMatrix.Clone();
             
-            while (k < 1000000)
+            while (k < 1000)
             {
-                var maxElement = FindMaxElement();
+                var maxElement = FindMaxElement(aK);
+                
                 if (Math.Abs(maxElement.Element) <= Accuracy)
                 {
                     break;
-                }
-
+                }                
+                
                 var jacobiMatrix = BuildJacobyMatrix(maxElement);
-                aK *= jacobiMatrix;
-                aK *= jacobiMatrix.Transpose();
+                _rotateMatrixMul *= jacobiMatrix.Transpose();
+                aK = jacobiMatrix.Transpose()*aK*jacobiMatrix;                
                 k++;
+
+
             }
 
-            ownNumbers = new DenseVector(aK.Diagonal().ToArray());
+            _ownNumbers = new DenseVector(aK.Diagonal().ToArray());
         }
 
-        private MatrixElement FindMaxElement()
+        private MatrixElement FindMaxElement(Matrix<double> matrix)
         {
-            MatrixElement absMax = new MatrixElement {Element = _aMatrix[0, 1], I = 0, J = 1};
+            MatrixElement absMax = new MatrixElement { Element = matrix[0, 1], I = 0, J = 1 };
 
-            for (int i = 0; i < _aMatrix.RowCount; i++)
+            for(int i = 0; i < matrix.RowCount; i++)
             {
-                for (int j = 0; j < _aMatrix.ColumnCount; j++)
+                for(int j = 0; j < matrix.ColumnCount; j++)
                 {
-                    if (i < j && Math.Abs(_aMatrix[i, j]) > absMax.Element)
+                    if(i < j && Math.Abs(matrix[i, j]) > absMax.Element)
                     {
-                        absMax.Element = _aMatrix[i, j];
+                        absMax.Element = matrix[i, j];
                         absMax.I = i;
                         absMax.J = j;
                     }
@@ -74,10 +81,10 @@ namespace LabWork_5
 
             var order = _aMatrix.ColumnCount-1;
             var jacobiMatrix = DenseMatrix.CreateIdentity(order+1);
-            jacobiMatrix[0, 0] = cosK;
-            jacobiMatrix[order, order] = cosK;
-            jacobiMatrix[order, 0] = sinK;
-            jacobiMatrix[0, order] = -sinK;
+            jacobiMatrix[maxElement.I, maxElement.I] = cosK;
+            jacobiMatrix[maxElement.J, maxElement.J] = cosK;
+            jacobiMatrix[maxElement.J, maxElement.I] = sinK;
+            jacobiMatrix[maxElement.I, maxElement.J] = -sinK;
 
             return jacobiMatrix;
         }
