@@ -14,7 +14,7 @@ namespace LabWork_7
     {
         public static void Main()
         {
-            Func<double, double> func = (x) => Math.Exp(-x);
+            Func<double, double> func = x => Math.Exp(-x);
 
             var xValues = Enumerable.Range(0, 500).Select(v => v/(double) 100).ToArray();
             var yValues = xValues.Select(v => func(v)).ToArray();
