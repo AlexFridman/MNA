@@ -1,15 +1,38 @@
 ﻿// Интерполирование функций естественными кубическими сплайнами
 
+#region
+
+using System;
+using System.Linq;
+using System.Text;
+
+#endregion
+
 namespace LabWork_7
 {
+    public static class Program
+    {
+        public static void Main()
+        {
+            Func<double, double> func = (x) => Math.Exp(-x);
+
+            var xValues = Enumerable.Range(0, 500).Select(v => v/(double) 100).ToArray();
+            var yValues = xValues.Select(v => func(v)).ToArray();
+            var spline = new CubicSpline();
+            spline.BuildSpline(xValues, yValues, 500);
+            Console.WriteLine(spline.Interpolate(2.1, true));
+            Console.WriteLine(func(2.1));
+        }
+    }
+
     internal class CubicSpline
     {
-        private SplineTuple[] splines; // Сплайн
+        private SplineTuple[] _splines; // Сплайн
 
         // Структура, описывающая сплайн на каждом сегменте сетки
         private struct SplineTuple
         {
-            public double a, b, c, d, x;
+            public double A, B, C, D, X;
         }
 
         // Построение сплайна
@@ -19,74 +42,74 @@ namespace LabWork_7
         public void BuildSpline(double[] x, double[] y, int n)
         {
             // Инициализация массива сплайнов
-            splines = new SplineTuple[n];
-            for (int i = 0; i < n; ++i)
+            _splines = new SplineTuple[n];
+            for (var i = 0; i < n; ++i)
             {
-                splines[i].x = x[i];
-                splines[i].a = y[i];
+                _splines[i].X = x[i];
+                _splines[i].A = y[i];
             }
-            splines[0].c = splines[n - 1].c = 0.0;
+            _splines[0].C = _splines[n - 1].C = 0.0;
 
             // Решение СЛАУ относительно коэффициентов сплайнов c[i] методом прогонки для трехдиагональных матриц
             // Вычисление прогоночных коэффициентов - прямой ход метода прогонки
-            double[] alpha = new double[n - 1];
-            double[] beta = new double[n - 1];
+            var alpha = new double[n - 1];
+            var beta = new double[n - 1];
             alpha[0] = beta[0] = 0.0;
-            for (int i = 1; i < n - 1; ++i)
+            for (var i = 1; i < n - 1; ++i)
             {
-                double hi = x[i] - x[i - 1];
-                double hi1 = x[i + 1] - x[i];
-                double A = hi;
-                double C = 2.0*(hi + hi1);
-                double B = hi1;
-                double F = 6.0*((y[i + 1] - y[i])/hi1 - (y[i] - y[i - 1])/hi);
-                double z = (A*alpha[i - 1] + C);
-                alpha[i] = -B/z;
-                beta[i] = (F - A*beta[i - 1])/z;
+                var hi = x[i] - x[i - 1];
+                var hi1 = x[i + 1] - x[i];
+                var a = hi;
+                var c = 2.0*(hi + hi1);
+                var b = hi1;
+                var f = 6.0*((y[i + 1] - y[i])/hi1 - (y[i] - y[i - 1])/hi);
+                var z = (a*alpha[i - 1] + c);
+                alpha[i] = -b/z;
+                beta[i] = (f - a*beta[i - 1])/z;
             }
 
             // Нахождение решения - обратный ход метода прогонки
-            for (int i = n - 2; i > 0; --i)
+            for (var i = n - 2; i > 0; --i)
             {
-                splines[i].c = alpha[i]*splines[i + 1].c + beta[i];
+                _splines[i].C = alpha[i]*_splines[i + 1].C + beta[i];
             }
 
             // По известным коэффициентам c[i] находим значения b[i] и d[i]
-            for (int i = n - 1; i > 0; --i)
+            for (var i = n - 1; i > 0; --i)
             {
-                double hi = x[i] - x[i - 1];
-                splines[i].d = (splines[i].c - splines[i - 1].c)/hi;
-                splines[i].b = hi*(2.0*splines[i].c + splines[i - 1].c)/6.0 + (y[i] - y[i - 1])/hi;
+                var hi = x[i] - x[i - 1];
+                _splines[i].D = (_splines[i].C - _splines[i - 1].C)/hi;
+                _splines[i].B = hi*(2.0*_splines[i].C + _splines[i - 1].C)/6.0 + (y[i] - y[i - 1])/hi;
             }
         }
 
         // Вычисление значения интерполированной функции в произвольной точке
-        public double Interpolate(double x)
+        public double Interpolate(double x, bool trace = false)
         {
-            if (splines == null)
+            if (_splines == null)
             {
                 return double.NaN; // Если сплайны ещё не построены - возвращаем NaN
             }
 
-            int n = splines.Length;
+            var n = _splines.Length;
             SplineTuple s;
 
-            if (x <= splines[0].x) // Если x меньше точки сетки x[0] - пользуемся первым эл-тов массива
+            if (x <= _splines[0].X) // Если x меньше точки сетки x[0] - пользуемся первым эл-тов массива
             {
-                s = splines[0];
+                s = _splines[0];
             }
-            else if (x >= splines[n - 1].x) // Если x больше точки сетки x[n - 1] - пользуемся последним эл-том массива
+            else if (x >= _splines[n - 1].X) // Если x больше точки сетки x[n - 1] - пользуемся последним эл-том массива
             {
-                s = splines[n - 1];
+                s = _splines[n - 1];
             }
             else // Иначе x лежит между граничными точками сетки - производим бинарный поиск нужного эл-та массива
             {
-                int i = 0;
-                int j = n - 1;
+                var i = 0;
+                var j = n - 1;
                 while (i + 1 < j)
                 {
-                    int k = i + (j - i)/2;
-                    if (x <= splines[k].x)
+                    var k = i + (j - i)/2;
+                    if (x <= _splines[k].X)
                     {
                         j = k;
                     }
@@ -95,12 +118,44 @@ namespace LabWork_7
                         i = k;
                     }
                 }
-                s = splines[j];
+                s = _splines[j];
             }
 
-            double dx = x - s.x;
+            var dx = x - s.X;
             // Вычисляем значение сплайна в заданной точке по схеме Горнера (в принципе, "умный" компилятор применил бы схему Горнера сам, но ведь не все так умны, как кажутся)
-            return s.a + (s.b + (s.c/2.0 + s.d*dx/6.0)*dx)*dx;
+            if (trace)
+            {
+                var type = typeof (SplineTuple);
+                var fields = type.GetFields();
+                var result = new StringBuilder();
+                object spline = s;
+                for (var pow = 3; pow >= 0; pow--)
+                {
+                    switch (pow)
+                    {
+                        case 3:
+                            result.Append((double) fields[0].GetValue(spline) >= 0 ? "" : "- ");
+                            result.AppendFormat("{0:F3}*x^3 ", (double) fields[0].GetValue(spline));
+                            break;
+                        case 0:
+                            result.Append((double) fields[3].GetValue(spline) >= 0 ? "" : "- ");
+                            result.AppendFormat("{0:F3}", (double) fields[0].GetValue(spline));
+                            break;
+                        default:
+                            result.Append((double) fields[3 - pow].GetValue(spline) >= 0 ? "" : "- ");
+                            result.AppendFormat("{0:F3}*x^{1} ", Math.Abs((double) fields[3 - pow].GetValue(spline)),
+                                pow);
+                            break;
+                    }
+                }
+
+                Console.WriteLine(result);
+                //Console.WriteLine(
+                //    (s.A > 0 ? "" : "- ") + "{0:F4}*x^3 " + (s.B > 0 ? "+" : "-") + " {1:F4}*x^2 " +
+                //    (s.C > 0 ? "+" : "-") + " {2:F4}*x " +
+                //    (s.D > 0 ? "+" : "-") + " {3:F4}", Math.Abs(s.A), Math.Abs(s.B), Math.Abs(s.C), Math.Abs(s.D));
+            }
+            return s.A + (s.B + (s.C/2.0 + s.D*dx/6.0)*dx)*dx;
         }
     }
 }
