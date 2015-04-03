@@ -31,10 +31,10 @@ namespace LabWork_8
         private static IEnumerable<double> GetX(double xMin, double xMax, int n)
         {
             var h = (xMax - xMin)/(double)n;
-            var result = new double[n];
+            var result = new double[n+1];
             result[0] = xMin;
 
-            for (var i = 1; i < n; i++)
+            for (var i = 1; i <= n; i++)
             {
                 result[i] = xMin + i*h;
             }
